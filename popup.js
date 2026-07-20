@@ -81,12 +81,13 @@ async function getPath(id) {
 
 async function render(folderId) {
     try {
-        const container = document.getElementById('bookmarkList');
-        const pathContainer = document.getElementById('path-container');
-        container.innerHTML = '';
-        pathContainer.innerHTML = '';
-
         const path = await getPath(folderId);
+        const children = await new Promise((resolve) => chrome.bookmarks.getChildren(folderId, resolve));
+
+        const container = document.createElement('ul');
+        const pathContainer = document.createElement('div');
+        pathContainer.id = 'path-container';
+
         path.forEach((node, index) => {
             const span = document.createElement('span');
             span.textContent = node.title;
@@ -97,8 +98,7 @@ async function render(folderId) {
             if (index < path.length - 1) pathContainer.appendChild(document.createTextNode(' > '));
         });
 
-        chrome.bookmarks.getChildren(folderId, (children) => {
-            if (!children) return;
+        if (children) {
             children.forEach(node => {
                 const li = document.createElement('li');
                 if (node.url) {
@@ -115,7 +115,6 @@ async function render(folderId) {
                             chrome.tabs.update({url: node.url}); 
                             window.close(); 
                         } else if (e.button === 2) {
-                            // Right click opens bookmark in a new tab in the foreground
                             chrome.tabs.create({url: node.url, active: true});
                         }
                     });
@@ -131,7 +130,6 @@ async function render(folderId) {
                     li.appendChild(folderIcon);
                     li.appendChild(document.createTextNode(node.title));
                     li.onclick = () => render(node.id);
-                    // Right clicking folders does nothing
                     li.addEventListener('mousedown', (e) => {
                         if (e.button === 2) {
                             e.preventDefault();
@@ -140,7 +138,15 @@ async function render(folderId) {
                 }
                 container.appendChild(li);
             });
-        });
+        }
+
+        const oldPathContainer = document.getElementById('path-container');
+        const oldContainer = document.getElementById('bookmarkList');
+        
+        oldPathContainer.replaceWith(pathContainer);
+        oldContainer.replaceWith(container);
+        container.id = 'bookmarkList';
+
     } catch (err) {
         console.error("Render error:", err);
     }
