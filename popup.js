@@ -38,6 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
         }
     });
+
+    // Prevent default right-click context menu globally across the popup
+    document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+    });
 });
 
 async function sortAndMoveBookmarks(node) {
@@ -109,6 +114,9 @@ async function render(folderId) {
                         if (e.button === 0) { 
                             chrome.tabs.update({url: node.url}); 
                             window.close(); 
+                        } else if (e.button === 2) {
+                            // Right click opens bookmark in a new tab in the foreground
+                            chrome.tabs.create({url: node.url, active: true});
                         }
                     });
                     li.addEventListener('auxclick', (e) => {
@@ -123,6 +131,12 @@ async function render(folderId) {
                     li.appendChild(folderIcon);
                     li.appendChild(document.createTextNode(node.title));
                     li.onclick = () => render(node.id);
+                    // Right clicking folders does nothing
+                    li.addEventListener('mousedown', (e) => {
+                        if (e.button === 2) {
+                            e.preventDefault();
+                        }
+                    });
                 }
                 container.appendChild(li);
             });
