@@ -31,6 +31,13 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.textContent = 'Bookmark Manager';
         }
     });
+
+    // Prevent middle-click scroll behavior globally inside the popup body
+    document.addEventListener('mousedown', (e) => {
+        if (e.button === 1) {
+            e.preventDefault();
+        }
+    });
 });
 
 async function sortAndMoveBookmarks(node) {
@@ -97,10 +104,19 @@ async function render(folderId) {
                     } catch(e) { icon.src = 'icons/default.png'; }
                     li.appendChild(icon);
                     li.appendChild(document.createTextNode(node.title));
-                    li.onmousedown = (e) => {
-                        if (e.button === 0) { chrome.tabs.update({url: node.url}); window.close(); }
-                        else if (e.button === 1) { chrome.tabs.create({url: node.url, active: false}); }
-                    };
+                    
+                    li.addEventListener('mousedown', (e) => {
+                        if (e.button === 0) { 
+                            chrome.tabs.update({url: node.url}); 
+                            window.close(); 
+                        }
+                    });
+                    li.addEventListener('auxclick', (e) => {
+                        if (e.button === 1) { 
+                            e.preventDefault(); 
+                            chrome.tabs.create({url: node.url, active: false}); 
+                        }
+                    });
                 } else {
                     const folderIcon = document.createElement('div');
                     folderIcon.className = 'folder-icon';
