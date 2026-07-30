@@ -41,6 +41,7 @@
       .header-icons {
         display: flex;
         gap: 8px;
+        align-items: center;
       }
 
       .icon-btn {
@@ -174,7 +175,7 @@
         display: none;
         z-index: 2000;
         padding: 4px 0;
-        min-width: 140px;
+        min-width: 150px;
       }
 
       .context-menu-item {
@@ -284,16 +285,22 @@
       <header>
         <h1>Bookmarks</h1>
         <div class="header-icons">
-          <!-- Microsoft Rewards Button -->
-          <button id="rewardsBtn" class="icon-btn" title="Microsoft Rewards">
-            <img src="https://rewards.bing.com/favicon.ico" width="16" height="16" alt="" style="vertical-align: middle;">
+          <!-- Cookies Settings Button -->
+          <button id="cookiesBtn" class="icon-btn" title="Cookies Settings">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5z"></path>
+              <line x1="8.5" y1="10.5" x2="8.51" y2="10.5"></line>
+              <line x1="12" y1="14" x2="12.01" y2="14"></line>
+              <line x1="15.5" y1="10.5" x2="15.51" y2="10.5"></line>
+            </svg>
           </button>
           <!-- Native Bookmark Manager Button -->
           <button id="chromeManagerBtn" class="icon-btn" title="Open Native Bookmark Manager">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
             </svg>
-          </button>        </div>
+          </button>
+        </div>
       </header>
 
       <section>
@@ -314,6 +321,7 @@
 
     <!-- Context Menu -->
     <div id="context-menu">
+      <div id="context-menu-rename" class="context-menu-item">Rename Pinned Item</div>
       <div id="context-menu-action" class="context-menu-item">Pin to Top</div>
     </div>
 

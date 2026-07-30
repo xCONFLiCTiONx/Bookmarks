@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Bookmarks Manager",
+  "name": "Bookmarks",
   "version": "1.0",
   "description": "Clean dark-themed bookmark manager with custom home page, modal folders, usage tracking, and options page.",
   "icons": {

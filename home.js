@@ -65,6 +65,22 @@ async function setPinnedUrls(pinned) {
     });
 }
 
+async function getCustomTitles() {
+    return new Promise((resolve) => {
+        chrome.storage.local.get(['pinnedCustomTitles'], (result) => {
+            resolve(result.pinnedCustomTitles || {});
+        });
+    });
+}
+
+async function setCustomTitles(titles) {
+    return new Promise((resolve) => {
+        chrome.storage.local.set({ pinnedCustomTitles: titles }, () => {
+            resolve();
+        });
+    });
+}
+
 function handleCardClick(e, url) {
     if (e.button === 0) {
         window.location.href = url;
@@ -79,37 +95,36 @@ async function renderPinnedBookmarks() {
     topGrid.innerHTML = '';
 
     const pinnedUrls = await getPinnedUrls();
+    const customTitles = await getCustomTitles();
 
     pinnedUrls.forEach(url => {
         let node = allNodesMap.get(url);
-        if (!node) {
-            node = { url: url, title: url };
-        }
+        let displayTitle = customTitles[url] || (node ? node.title : url);
 
         const card = document.createElement('div');
         card.className = 'card';
-        card.title = node.title;
+        card.title = displayTitle;
 
         const img = document.createElement('img');
-        img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(node.url)}&sz=16`;
+        img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(url)}&sz=16`;
         img.alt = '';
         img.onerror = () => { img.style.display = 'none'; };
 
         const span = document.createElement('span');
-        span.textContent = node.title;
+        span.textContent = displayTitle;
 
         card.appendChild(img);
         card.appendChild(span);
 
-        card.addEventListener('click', (e) => handleCardClick(e, node.url));
-        card.addEventListener('auxclick', (e) => handleCardClick(e, node.url));
+        card.addEventListener('click', (e) => handleCardClick(e, url));
+        card.addEventListener('auxclick', (e) => handleCardClick(e, url));
 
         card.addEventListener('contextmenu', async (e) => {
             e.preventDefault();
             e.stopPropagation();
             const pinnedUrls = await getPinnedUrls();
-            const isPinned = pinnedUrls.includes(node.url);
-            showContextMenu(e, node, isPinned);
+            const isPinned = pinnedUrls.includes(url);
+            showContextMenu(e, { url: url, title: displayTitle }, isPinned, true);
         });
 
         topGrid.appendChild(card);
@@ -166,7 +181,7 @@ async function renderRecentlyViewed() {
                 }
                 const currentPinned = await getPinnedUrls();
                 const isPinned = currentPinned.includes(item.url);
-                showContextMenu(e, allNodesMap.get(item.url), isPinned);
+                showContextMenu(e, allNodesMap.get(item.url), isPinned, false);
             });
 
             recentGrid.appendChild(card);
@@ -207,7 +222,7 @@ function renderAllBookmarksTree(rootNode) {
                 e.stopPropagation();
                 const pinnedUrls = await getPinnedUrls();
                 const isPinned = pinnedUrls.includes(node.url);
-                showContextMenu(e, node, isPinned);
+                showContextMenu(e, node, isPinned, false);
             });
         } else {
             const folderIcon = document.createElement('div');
@@ -294,7 +309,7 @@ function openFolderModal(folderNode, pathArray) {
                 e.stopPropagation();
                 const pinnedUrls = await getPinnedUrls();
                 const isPinned = pinnedUrls.includes(node.url);
-                showContextMenu(e, node, isPinned);
+                showContextMenu(e, node, isPinned, false);
             });
         } else {
             const folderIcon = document.createElement('div');
@@ -322,13 +337,20 @@ function openFolderModal(folderNode, pathArray) {
     backdrop.classList.add('active');
 }
 
-function showContextMenu(e, node, isPinned) {
+function showContextMenu(e, node, isPinned, isPinnedSection) {
     currentContextMenuNode = node;
     const menu = document.getElementById('context-menu');
     const actionItem = document.getElementById('context-menu-action');
-    if (!menu || !actionItem) return;
+    const renameItem = document.getElementById('context-menu-rename');
+    if (!menu || !actionItem || !renameItem) return;
 
     actionItem.textContent = isPinned ? 'Remove from Top' : 'Pin to Top';
+    
+    if (isPinnedSection) {
+        renameItem.style.display = 'block';
+    } else {
+        renameItem.style.display = 'none';
+    }
 
     menu.style.display = 'block';
     menu.style.left = `${e.pageX}px`;
@@ -338,8 +360,8 @@ function showContextMenu(e, node, isPinned) {
 function setupContextMenuListeners() {
     const menu = document.getElementById('context-menu');
     const actionItem = document.getElementById('context-menu-action');
+    const renameItem = document.getElementById('context-menu-rename');
 
-    // Prevent default context menu globally on the document (background)
     document.addEventListener('contextmenu', (e) => {
         e.preventDefault();
     });
@@ -347,6 +369,22 @@ function setupContextMenuListeners() {
     document.addEventListener('click', () => {
         if (menu) menu.style.display = 'none';
     });
+
+    if (renameItem) {
+        renameItem.addEventListener('click', async () => {
+            if (!currentContextMenuNode || !currentContextMenuNode.url) return;
+            const url = currentContextMenuNode.url;
+            const currentTitle = currentContextMenuNode.title;
+
+            const newTitle = prompt('Enter new name for pinned item:', currentTitle);
+            if (newTitle !== null && newTitle.trim() !== '') {
+                const customTitles = await getCustomTitles();
+                customTitles[url] = newTitle.trim();
+                await setCustomTitles(customTitles);
+                await renderPinnedBookmarks();
+            }
+        });
+    }
 
     if (actionItem) {
         actionItem.addEventListener('click', async () => {
@@ -393,11 +431,18 @@ function setupModalListeners() {
 
 function setupHeaderButtons() {
     const rewardsBtn = document.getElementById('rewardsBtn');
+    const cookiesBtn = document.getElementById('cookiesBtn');
     const chromeManagerBtn = document.getElementById('chromeManagerBtn');
 
     if (rewardsBtn) {
         rewardsBtn.addEventListener('click', () => {
             window.location.href = 'https://rewards.bing.com/';
+        });
+    }
+
+    if (cookiesBtn) {
+        cookiesBtn.addEventListener('click', () => {
+            chrome.tabs.create({ url: 'chrome://settings/content/all' });
         });
     }
 
