@@ -6,30 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
         render(root.id);
     });
 
-    // Button action: Sort bookmarks then open native manager
-    document.getElementById('exportSortBtn').addEventListener('click', async () => {
-        const btn = document.getElementById('exportSortBtn');
-        btn.disabled = true;
-        btn.textContent = 'Sorting...';
-
-        try {
-            const tree = await new Promise((resolve) => chrome.bookmarks.getTree(resolve));
-            
-            // 1. Physically sort and move in Chrome
-            await sortAndMoveBookmarks(tree[0]);
-            
-            // 2. Open the native Chrome Bookmark Manager for export
-            chrome.tabs.create({ url: 'chrome://bookmarks/?id=2' });
-
-            // 3. Re-render UI after sorting is complete
-            render(tree[0].children[0].id);
-        } catch (err) {
-            console.error("Sort error:", err);
-            alert("Error: " + err.message);
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Bookmark Manager';
-        }
+    // Open Bookmarks Manager
+    document.getElementById('exportSortBtn').addEventListener('click', () => {
+        chrome.tabs.create({ url: 'chrome://bookmarks/' });
     });
 
     // Prevent middle-click scroll behavior globally inside the popup body
@@ -44,26 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
     });
 });
-
-async function sortAndMoveBookmarks(node) {
-    if (!node.children || node.children.length === 0) return;
-
-    const sortedChildren = [...node.children].sort((a, b) => {
-        const aIsFolder = !a.url;
-        const bIsFolder = !b.url;
-        if (aIsFolder !== bIsFolder) return aIsFolder ? -1 : 1;
-        return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
-    });
-
-    for (let i = 0; i < sortedChildren.length; i++) {
-        if (sortedChildren[i].index !== i) {
-            await new Promise((resolve) => {
-                chrome.bookmarks.move(sortedChildren[i].id, { index: i, parentId: node.id }, resolve);
-            });
-        }
-        await sortAndMoveBookmarks(sortedChildren[i]);
-    }
-}
 
 async function getPath(id) {
     let path = [];

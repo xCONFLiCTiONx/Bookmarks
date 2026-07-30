@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Bookmarks Home</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: #121212;
+        color: #e0e0e0;
+        display: flex;
+        justify-content: center;
+      }
+
+      .main-container {
+        width: 100%;
+        max-width: 1000px;
+        padding: 24px 20px;
+        box-sizing: border-box;
+        position: relative;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #222;
+        padding-bottom: 10px;
+      }
+
+      h1 {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0;
+        color: #ffffff;
+      }
+
+      .header-icons {
+        display: flex;
+        gap: 8px;
+      }
+
+      .icon-btn {
+        background: transparent;
+        border: none;
+        color: #999;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s, color 0.2s;
+      }
+
+      .icon-btn:hover {
+        background: #1e1e1e;
+        color: #fff;
+      }
+
+      section {
+        margin-bottom: 25px;
+      }
+
+      h2 {
+        font-size: 12px;
+        font-weight: 400;
+        color: #777;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 10px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
+      }
+
+      .card {
+        background-color: #181818;
+        border: 1px solid #242424;
+        border-radius: 6px;
+        padding: 8px 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 38px;
+        box-sizing: border-box;
+        transition: background 0.15s, border-color 0.15s;
+        overflow: hidden;
+      }
+
+      .card:hover {
+        background-color: #222;
+        border-color: #333;
+      }
+
+      .card img, .card .folder-icon-large {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+
+      .folder-icon-large {
+        background-color: #fbc02d;
+        border-radius: 3px;
+      }
+
+      .card span {
+        font-size: 12px;
+        color: #ccc;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .tree-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
+      }
+
+      .tree-item {
+        background-color: #181818;
+        border: 1px solid #242424;
+        border-radius: 6px;
+        padding: 8px 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 38px;
+        box-sizing: border-box;
+        transition: background 0.15s, border-color 0.15s;
+        overflow: hidden;
+        font-size: 12px;
+        color: #ccc;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .tree-item:hover {
+        background-color: #222;
+        border-color: #333;
+      }
+
+      .tree-icon, .folder-icon-small {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+
+      .folder-icon-small {
+        height: 12px;
+        background-color: #fbc02d;
+        border-radius: 2px;
+      }
+
+      /* Context Menu */
+      #context-menu {
+        position: absolute;
+        background: #1c1c1c;
+        border: 1px solid #333;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        display: none;
+        z-index: 2000;
+        padding: 4px 0;
+        min-width: 140px;
+      }
+
+      .context-menu-item {
+        padding: 8px 12px;
+        font-size: 12px;
+        color: #ccc;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .context-menu-item:hover {
+        background: #282828;
+        color: #fff;
+      }
+
+      /* Modal Styling */
+      #modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+
+      #modal-backdrop.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      #modal-window {
+        background-color: #161616;
+        border: 1px solid #2a2a2a;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 750px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        overflow: hidden;
+      }
+
+      .modal-header {
+        padding: 10px 14px;
+        background-color: #1c1c1c;
+        border-bottom: 1px solid #262626;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .modal-breadcrumbs {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #888;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .modal-breadcrumbs span {
+        cursor: pointer;
+        color: #4da6ff;
+      }
+
+      .modal-breadcrumbs span:hover {
+        text-decoration: underline;
+      }
+
+      .modal-close-btn {
+        background: transparent;
+        border: none;
+        color: #777;
+        font-size: 16px;
+        cursor: pointer;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+
+      .modal-close-btn:hover {
+        background: #282828;
+        color: #fff;
+      }
+
+      .modal-body {
+        padding: 14px;
+        overflow-y: auto;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
+        max-height: 60vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-container">
+      <header>
+        <h1>Bookmarks</h1>
+        <div class="header-icons">
+          <!-- Microsoft Rewards Button -->
+          <button id="rewardsBtn" class="icon-btn" title="Microsoft Rewards">
+            <img src="https://rewards.bing.com/favicon.ico" width="16" height="16" alt="" style="vertical-align: middle;">
+          </button>
+          <!-- Native Bookmark Manager Button -->
+          <button id="chromeManagerBtn" class="icon-btn" title="Open Native Bookmark Manager">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </button>        </div>
+      </header>
+
+      <section>
+        <h2>Pinned Bookmarks</h2>
+        <div id="top-used-grid" class="grid"></div>
+      </section>
+
+      <section>
+        <h2>Recently Viewed</h2>
+        <div id="recently-viewed-grid" class="grid"></div>
+      </section>
+
+      <section>
+        <h2>All Bookmarks</h2>
+        <ul id="all-bookmarks-tree" class="tree-list"></ul>
+      </section>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="context-menu">
+      <div id="context-menu-action" class="context-menu-item">Pin to Top</div>
+    </div>
+
+    <!-- Modal Template -->
+    <div id="modal-backdrop">
+      <div id="modal-window">
+        <div class="modal-header">
+          <div id="modal-breadcrumbs" class="modal-breadcrumbs"></div>
+          <button id="modal-close" class="modal-close-btn">&times;</button>
+        </div>
+        <div id="modal-body" class="modal-body"></div>
+      </div>
+    </div>
+
+    <script src="home.js"></script>
+  </body>
+</html>
