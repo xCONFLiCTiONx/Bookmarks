@@ -433,6 +433,7 @@ function setupHeaderButtons() {
     const rewardsBtn = document.getElementById('rewardsBtn');
     const cookiesBtn = document.getElementById('cookiesBtn');
     const chromeManagerBtn = document.getElementById('chromeManagerBtn');
+    const chromeSettingsBtn = document.getElementById('chromeSettingsBtn');
 
     if (rewardsBtn) {
         rewardsBtn.addEventListener('click', () => {
@@ -449,6 +450,12 @@ function setupHeaderButtons() {
     if (chromeManagerBtn) {
         chromeManagerBtn.addEventListener('click', () => {
             chrome.tabs.create({ url: 'chrome://bookmarks/' });
+        });
+    }
+
+    if (chromeSettingsBtn) {
+        chromeSettingsBtn.addEventListener('click', () => {
+            chrome.tabs.create({ url: 'chrome://settings/' });
         });
     }
 }
