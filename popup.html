@@ -2,12 +2,32 @@
 <html>
   <head>
     <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f5f5;
+        --text: #1f1f1f;
+        --panel: #ffffff;
+        --panel-alt: #f0f0f0;
+        --border: #e0e0e0;
+        --muted: #666;
+      }
+
+      :root[data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #1e1e1e;
+        --text: #e0e0e0;
+        --panel: #2a2a2a;
+        --panel-alt: #333;
+        --border: #333;
+        --muted: #aaa;
+      }
+
       body { 
         width: 400px; 
         font-family: sans-serif; 
         margin: 0; 
-        background-color: #1e1e1e; 
-        color: #e0e0e0; 
+        background-color: var(--bg); 
+        color: var(--text); 
       }
       
       #bookmarkList { 
@@ -22,8 +42,8 @@
 
       #nav-row { 
         padding: 6px 8px; 
-        background-color: #2a2a2a; 
-        border-bottom: 2px solid #333; 
+        background-color: var(--panel); 
+        border-bottom: 2px solid var(--border); 
         font-size: 12px;
         display: flex;
         align-items: center;
@@ -42,8 +62,8 @@
       }
 
       #footer-row {
-        background-color: #2a2a2a;
-        border-top: 2px solid #333;
+        background-color: var(--panel);
+        border-top: 2px solid var(--border);
         padding: 0 8px;
         display: flex;
         justify-content: flex-end;
@@ -52,9 +72,9 @@
         height: 33px;
       }
 
-      #exportSortBtn {
+      .footer-btn {
         background: transparent; 
-        color: #aaa; 
+        color: var(--muted); 
         border: none; 
         padding: 4px; 
         cursor: pointer; 
@@ -64,26 +84,27 @@
         justify-content: center;
         width: 24px;
         height: 24px;
+        margin-left: 4px;
       }
-      #exportSortBtn:hover { 
-        background: #333; 
-        color: #fff; 
+      .footer-btn:hover { 
+        background: var(--panel-alt); 
+        color: var(--text); 
       }
 
-      #footer-row #exportSortBtn {
+      #footer-row .footer-btn {
         background: transparent;
-        color: #aaa;
+        color: var(--muted);
       }
-      #footer-row #exportSortBtn:hover {
-        background: #333;
-        color: #fff;
+      #footer-row .footer-btn:hover {
+        background: var(--panel-alt);
+        color: var(--text);
       }
 
       ul { list-style: none; padding: 0; margin: 0; }
       li { 
-        padding: 9px; cursor: pointer; border-bottom: 1px solid #333; display: flex; align-items: center; 
+        padding: 9px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; 
       }
-      li:hover { background-color: #333; }
+      li:hover { background-color: var(--panel-alt); }
       
       .folder-icon { 
         width: 18px; height: 13px; background-color: #fbc02d; border-radius: 2px; margin-right: 10px; display: inline-block; flex-shrink: 0; 
@@ -95,14 +116,8 @@
       <div id="path-container"></div>
     </div>
     <ul id="bookmarkList"></ul>
-    <div id="footer-row">
-      <button id="exportSortBtn" title="Bookmarks Manager">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-        </svg>
-      </button>
-    </div>
+    <div id="footer-row"></div>
+    <script src="theme.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

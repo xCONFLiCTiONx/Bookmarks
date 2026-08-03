@@ -5,25 +5,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     await initializeBookmarkPage();
     setupModalListeners();
     setupContextMenuListeners();
+    setupFloatingSettingsButton();
 });
+
+async function getPreferredRootFolderId() {
+    return new Promise((resolve) => {
+        chrome.storage.local.get({ popupRootFolderId: '2', popupRootFolder: '2' }, (result) => {
+            resolve(result.popupRootFolderId || result.popupRootFolder || '2');
+        });
+    });
+}
+
+function findNodeById(nodes, targetId) {
+    for (const node of nodes || []) {
+        if (node.id === targetId) return node;
+        if (node.children) {
+            const found = findNodeById(node.children, targetId);
+            if (found) return found;
+        }
+    }
+    return null;
+}
+
+function resolveRootNode(bookmarkTree, preferredId) {
+    const rootNode = bookmarkTree && bookmarkTree[0];
+    if (!rootNode) return null;
+
+    const preferredNode = findNodeById(bookmarkTree, preferredId);
+    if (preferredNode && !preferredNode.url) return preferredNode;
+
+    const fallbackNode = findNodeById(bookmarkTree, '2') ||
+        (rootNode.children && rootNode.children.find(node => node.title === 'Other bookmarks')) ||
+        (rootNode.children && rootNode.children.find(node => !node.url)) ||
+        (rootNode.children && rootNode.children[0]);
+
+    return fallbackNode || rootNode;
+}
 
 async function initializeBookmarkPage() {
     try {
         const bookmarkTree = await chrome.bookmarks.getTree();
-        
-        let rootNode = null;
-        function findNodeById(nodes, targetId) {
-            for (const node of nodes) {
-                if (node.id === targetId) return node;
-                if (node.children) {
-                    const found = findNodeById(node.children, targetId);
-                    if (found) return found;
-                }
-            }
-            return null;
-        }
-
-        rootNode = findNodeById(bookmarkTree, "2") || bookmarkTree[0];
+        const preferredRootFolderId = await getPreferredRootFolderId();
+        const rootNode = resolveRootNode(bookmarkTree, preferredRootFolderId);
         allNodesMap.clear();
 
         function traverse(nodes) {
@@ -44,6 +67,12 @@ async function initializeBookmarkPage() {
         await renderRecentlyViewed();
         renderAllBookmarksTree(rootNode);
         setupHeaderButtons();
+
+        chrome.storage.onChanged.addListener((changes, namespace) => {
+            if (namespace === 'local' && (changes.popupRootFolderId || changes.popupRootFolder)) {
+                initializeBookmarkPage();
+            }
+        });
     } catch (error) {
         console.error("Failed to initialize bookmarks:", error);
     }
@@ -429,33 +458,87 @@ function setupModalListeners() {
     }
 }
 
-function setupHeaderButtons() {
-    const rewardsBtn = document.getElementById('rewardsBtn');
-    const cookiesBtn = document.getElementById('cookiesBtn');
-    const chromeManagerBtn = document.getElementById('chromeManagerBtn');
-    const chromeSettingsBtn = document.getElementById('chromeSettingsBtn');
+function setupFloatingSettingsButton() {
+    const button = document.getElementById('settingsBtn');
+    if (!button) return;
 
-    if (rewardsBtn) {
-        rewardsBtn.addEventListener('click', () => {
-            window.location.href = 'https://rewards.bing.com/';
-        });
-    }
+    button.addEventListener('click', async () => {
+        try {
+            await chrome.runtime.openOptionsPage();
+        } catch (error) {
+            console.error('Failed to open extension settings:', error);
+        }
+    });
+}
 
-    if (cookiesBtn) {
-        cookiesBtn.addEventListener('click', () => {
-            chrome.tabs.create({ url: 'chrome://settings/content/all' });
+async function getToolbarSettings() {
+    return new Promise((resolve) => {
+        chrome.storage.local.get({ toolbarItems: ['bookmarks', 'contentAll', 'policy', 'siteData', 'settings'] }, (result) => {
+            resolve(result.toolbarItems || []);
         });
-    }
+    });
+}
 
-    if (chromeManagerBtn) {
-        chromeManagerBtn.addEventListener('click', () => {
-            chrome.tabs.create({ url: 'chrome://bookmarks/' });
-        });
-    }
+function createToolbarButton(id, title, iconSvg, onClick) {
+    const button = document.createElement('button');
+    button.id = id;
+    button.className = 'icon-btn';
+    button.title = title;
+    button.type = 'button';
+    button.innerHTML = iconSvg;
+    button.addEventListener('click', onClick);
+    return button;
+}
 
-    if (chromeSettingsBtn) {
-        chromeSettingsBtn.addEventListener('click', () => {
-            chrome.tabs.create({ url: 'chrome://settings/' });
-        });
-    }
+async function setupHeaderButtons() {
+    const toolbar = document.getElementById('header-toolbar');
+    if (!toolbar) return;
+
+    toolbar.innerHTML = '';
+
+    const enabledItems = await getToolbarSettings();
+
+    const buttonDefinitions = [
+        {
+            id: 'contentBtn',
+            title: 'Content Settings',
+            key: 'contentAll',
+            svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5z"></path><line x1="8.5" y1="10.5" x2="8.51" y2="10.5"></line><line x1="12" y1="14" x2="12.01" y2="14"></line><line x1="15.5" y1="10.5" x2="15.51" y2="10.5"></line></svg>',
+            onClick: () => chrome.tabs.create({ url: 'chrome://settings/content/all' })
+        },
+        {
+            id: 'policyBtn',
+            title: 'Policy Viewer',
+            key: 'policy',
+            svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>',
+            onClick: () => chrome.tabs.create({ url: 'chrome://policy' })
+        },
+        {
+            id: 'siteDataBtn',
+            title: 'Site Data',
+            key: 'siteData',
+            svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 10h18"></path><path d="M8 2v4"></path><path d="M16 2v4"></path></svg>',
+            onClick: () => chrome.tabs.create({ url: 'chrome://settings/siteData' })
+        },
+        {
+            id: 'chromeManagerBtn',
+            title: 'Open Native Bookmark Manager',
+            key: 'bookmarks',
+            svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>',
+            onClick: () => chrome.tabs.create({ url: 'chrome://bookmarks/' })
+        },
+        {
+            id: 'chromeSettingsBtn',
+            title: 'Chrome Settings',
+            key: 'settings',
+            svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>',
+            onClick: () => chrome.tabs.create({ url: 'chrome://settings/' })
+        },
+    ];
+
+    buttonDefinitions.forEach((buttonDef) => {
+        if (enabledItems.includes(buttonDef.key)) {
+            toolbar.appendChild(createToolbarButton(buttonDef.id, buttonDef.title, buttonDef.svg, buttonDef.onClick));
+        }
+    });
 }

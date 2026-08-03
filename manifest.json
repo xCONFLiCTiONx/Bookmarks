@@ -20,5 +20,9 @@
     "unlimitedStorage",
     "storage",
     "history"
-  ]
+  ],
+  "options_ui": {
+    "page": "settings.html",
+    "open_in_tab": true
+  }
 }
