@@ -70,6 +70,7 @@
         display: flex;
         gap: 8px;
         align-items: center;
+        position: relative;
       }
 
       .icon-btn {
@@ -91,27 +92,60 @@
       }
 
       .floating-settings-btn {
-        position: fixed;
-        right: 24px;
-        bottom: 24px;
-        width: 44px;
-        height: 44px;
+        background: transparent;
         border: none;
-        border-radius: 999px;
-        background: var(--panel);
-        color: var(--text);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        padding: 6px;
+        border-radius: 6px;
+        color: var(--muted);
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        z-index: 1100;
-        transition: background 0.2s, transform 0.2s;
+        transition: background 0.2s, color 0.2s;
       }
 
       .floating-settings-btn:hover {
         background: var(--panel-alt);
-        transform: translateY(-1px);
+        color: var(--text);
+      }
+
+      .navigation-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
+        min-width: 220px;
+        display: none;
+        z-index: 1500;
+        overflow: hidden;
+      }
+
+      .navigation-menu.active {
+        display: block;
+      }
+
+      .navigation-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        font-size: 13px;
+        color: var(--text);
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .navigation-menu-item:hover {
+        background: var(--panel-alt);
+      }
+
+      .navigation-menu-item svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
       }
 
       section {
@@ -336,7 +370,17 @@
     <div class="main-container">
       <header>
         <h1>Bookmarks</h1>
-        <div id="header-toolbar" class="header-icons"></div>
+        <div class="header-icons">
+          <div id="header-toolbar"></div>
+          <button id="navBtn" class="floating-settings-btn" title="Navigation" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="7" x2="20" y2="7"></line>
+              <line x1="4" y1="12" x2="20" y2="12"></line>
+              <line x1="4" y1="17" x2="20" y2="17"></line>
+            </svg>
+          </button>
+          <div id="nav-menu" class="navigation-menu"></div>
+        </div>
       </header>
 
       <section>
@@ -354,13 +398,6 @@
         <ul id="all-bookmarks-tree" class="tree-list"></ul>
       </section>
     </div>
-
-    <button id="settingsBtn" class="floating-settings-btn" title="Extension Settings" type="button">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"></circle>
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-      </svg>
-    </button>
 
     <!-- Context Menu -->
     <div id="context-menu">
