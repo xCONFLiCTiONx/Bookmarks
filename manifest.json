@@ -12,14 +12,16 @@
   "chrome_url_overrides": {
     "newtab": "home.html"
   },
-  "action": {
-    "default_popup": "popup.html"
+  "action": {},
+  "background": {
+    "service_worker": "background.js"
   },
   "permissions": [
     "bookmarks",
     "unlimitedStorage",
     "storage",
-    "history"
+    "history",
+    "windows"
   ],
   "options_ui": {
     "page": "settings.html",
