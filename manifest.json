@@ -19,7 +19,8 @@
     "bookmarks",
     "unlimitedStorage",
     "storage",
-    "history"
+    "history",
+    "favicon"
   ],
   "options_ui": {
     "page": "settings.html",

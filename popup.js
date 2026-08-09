@@ -118,7 +118,7 @@ async function render(folderId) {
                     })();
 
                     if (hostname) {
-                        icon.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=16`;
+                        icon.src = getFaviconUrl(node.url, 16);
                     } else {
                         icon.src = defaultIcon;
                     }

@@ -45,6 +45,13 @@ function getNavigationItems() {
     ];
 }
 
+function getFaviconUrl(url, size = 16) {
+    const faviconUrl = new URL(chrome.runtime.getURL('/_favicon/'));
+    faviconUrl.searchParams.set('pageUrl', url);
+    faviconUrl.searchParams.set('size', size.toString());
+    return faviconUrl.toString();
+}
+
 function renderNavigationMenu(menu) {
     const items = getNavigationItems();
     menu.innerHTML = '';

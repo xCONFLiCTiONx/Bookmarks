@@ -134,7 +134,7 @@ async function renderPinnedBookmarks() {
         card.title = displayTitle;
 
         const img = document.createElement('img');
-        img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(url)}&sz=16`;
+        img.src = getFaviconUrl(url, 16);
         img.alt = '';
         img.onerror = () => { img.style.display = 'none'; };
 
@@ -188,7 +188,7 @@ async function renderRecentlyViewed() {
             card.title = item.title;
 
             const img = document.createElement('img');
-            img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(item.url)}&sz=16`;
+            img.src = getFaviconUrl(item.url, 16);
             img.alt = '';
             img.onerror = () => { img.style.display = 'none'; };
 
@@ -232,7 +232,7 @@ function renderAllBookmarksTree(rootNode) {
         if (node.url) {
             const img = document.createElement('img');
             img.className = 'tree-icon';
-            img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(node.url)}&sz=16`;
+            img.src = getFaviconUrl(node.url, 16);
             img.alt = '';
             img.onerror = () => { img.style.display = 'none'; };
 
@@ -320,7 +320,7 @@ function openFolderModal(folderNode, pathArray) {
 
         if (node.url) {
             const img = document.createElement('img');
-            img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(node.url)}&sz=16`;
+            img.src = getFaviconUrl(node.url, 16);
             img.alt = '';
             img.onerror = () => { img.style.display = 'none'; };
             card.appendChild(img);
