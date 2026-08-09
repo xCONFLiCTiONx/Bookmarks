@@ -6,6 +6,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupModalListeners();
     setupContextMenuListeners();
     setupNavigationMenu();
+    await renderToolbar();
+
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+        if (namespace === 'local') {
+            if (changes.popupRootFolderId || changes.popupRootFolder) {
+                initializeBookmarkPage();
+            }
+            if (changes.toolbarItems) {
+                renderToolbar();
+            }
+        }
+    });
 });
 
 async function getPreferredRootFolderId() {
@@ -66,12 +78,6 @@ async function initializeBookmarkPage() {
         await renderPinnedBookmarks();
         await renderRecentlyViewed();
         renderAllBookmarksTree(rootNode);
-
-        chrome.storage.onChanged.addListener((changes, namespace) => {
-            if (namespace === 'local' && (changes.popupRootFolderId || changes.popupRootFolder)) {
-                initializeBookmarkPage();
-            }
-        });
     } catch (error) {
         console.error("Failed to initialize bookmarks:", error);
     }
@@ -461,7 +467,7 @@ function setupModalListeners() {
 
 async function getToolbarSettings() {
     return new Promise((resolve) => {
-        chrome.storage.local.get({ toolbarItems: ['bookmarks', 'contentAll', 'policy', 'siteData', 'settings', 'extensions'] }, (result) => {
+        chrome.storage.local.get({ toolbarItems: ['bookmarks', 'contentAll', 'policy', 'settings', 'extensions'] }, (result) => {
             resolve(result.toolbarItems || []);
         });
     });

@@ -13,22 +13,16 @@ function getNavigationItems() {
             onClick: () => chrome.tabs.create({ url: 'chrome://settings/' })
         },
         {
-            id: 'extensions',
-            title: 'Extensions',
-            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l4 4-4 4-4-4 4-4z"></path><path d="M12 13l4 4-4 4-4-4 4-4z"></path></svg>',
-            onClick: () => chrome.tabs.create({ url: 'chrome://extensions/' })
-        },
-        {
             id: 'contentAll',
-            title: 'Content Settings',
+            title: 'Cookies',
             svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5z"></path><line x1="8.5" y1="10.5" x2="8.51" y2="10.5"></line><line x1="12" y1="14" x2="12.01" y2="14"></line><line x1="15.5" y1="10.5" x2="15.51" y2="10.5"></line></svg>',
             onClick: () => chrome.tabs.create({ url: 'chrome://settings/content/all' })
         },
         {
-            id: 'siteData',
-            title: 'Site Data',
-            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 10h18"></path><path d="M8 2v4"></path><path d="M16 2v4"></path></svg>',
-            onClick: () => chrome.tabs.create({ url: 'chrome://settings/siteData' })
+            id: 'extensions',
+            title: 'Extensions',
+            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.45 10.15C19.79 10.6 20 11.26 20 12s-.21 1.4-.55 1.85l1.55 1.55c.4.4.4 1.05 0 1.45l-1.45 1.45c-.4.4-1.05.4-1.45 0l-1.55-1.55C13.4 19.79 12.75 20 12 20s-1.4-.21-1.85-.55l-1.55 1.55c-.4.4-1.05.4-1.45 0l-1.45-1.45c-.4-.4-.4-1.05 0-1.45l1.55-1.55C4.21 13.4 4 12.75 4 12s.21-1.4.55-1.85L3 8.6c-.4-.4-.4-1.05 0-1.45l1.45-1.45c.4-.4 1.05-.4 1.45 0l1.55 1.55C10.6 4.21 11.26 4 12 4s1.4.21 1.85.55l1.55-1.55c.4-.4 1.05-.4 1.45 0l1.45 1.45c.4.4.4 1.05 0 1.45l-1.55 1.55z"/></svg>',
+            onClick: () => chrome.tabs.create({ url: 'chrome://extensions/' })
         },
         {
             id: 'policy',
