@@ -6,15 +6,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupModalListeners();
     setupContextMenuListeners();
     setupNavigationMenu();
-    await renderToolbar();
 
     chrome.storage.onChanged.addListener((changes, namespace) => {
         if (namespace === 'local') {
             if (changes.popupRootFolderId || changes.popupRootFolder) {
                 initializeBookmarkPage();
-            }
-            if (changes.toolbarItems) {
-                renderToolbar();
             }
         }
     });
@@ -465,21 +461,3 @@ function setupModalListeners() {
 
 
 
-async function getToolbarSettings() {
-    return new Promise((resolve) => {
-        chrome.storage.local.get({ toolbarItems: ['bookmarks', 'contentAll', 'policy', 'settings', 'extensions'] }, (result) => {
-            resolve(result.toolbarItems || []);
-        });
-    });
-}
-
-function createToolbarButton(id, title, iconSvg, onClick) {
-    const button = document.createElement('button');
-    button.id = id;
-    button.className = 'icon-btn';
-    button.title = title;
-    button.type = 'button';
-    button.innerHTML = iconSvg;
-    button.addEventListener('click', onClick);
-    return button;
-}
