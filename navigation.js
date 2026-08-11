@@ -23,7 +23,7 @@ function getNavigationItems() {
             title: 'Extensions',
             svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11V7.5C21 6.4 20.1 5.5 19 5.5H15C15 4.1 13.9 3 12.5 3S10 4.1 10 5.5H6C4.9 5.5 4 6.4 4 7.5V11C5.4 11 6.5 12.1 6.5 13.5S5.4 16 4 16V19.5C4 20.6 4.9 21.5 6 21.5H9.5C9.5 22.9 10.6 24 12.5 24S15 22.9 15 21.5H19C20.1 21.5 21 20.6 21 19.5V16C19.6 16 18.5 14.9 18.5 13.5S19.6 11 21 11Z"/></svg>',
             onClick: () => chrome.tabs.create({ url: 'chrome://extensions/' })
-            },
+        },
         {
             id: 'policy',
             title: 'Policy Viewer',
