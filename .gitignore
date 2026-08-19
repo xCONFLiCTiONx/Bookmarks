@@ -431,3 +431,4 @@ FodyWeavers.xsd
 # Custom
 whitelist.txt
 *.bat
+.idea/
