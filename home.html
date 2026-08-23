@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Bookmarks Home</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f5f5;
+        --text: #1f1f1f;
+        --muted: #666;
+        --panel: #ffffff;
+        --panel-alt: #f0f0f0;
+        --border: #e0e0e0;
+        --card-bg: #ffffff;
+        --card-border: #e2e2e2;
+        --card-hover: #f2f2f2;
+        --accent: #4da6ff;
+      }
+
+      :root[data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #121212;
+        --text: #e0e0e0;
+        --muted: #777;
+        --panel: #181818;
+        --panel-alt: #1e1e1e;
+        --border: #242424;
+        --card-bg: #181818;
+        --card-border: #242424;
+        --card-hover: #222;
+        --accent: #4da6ff;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        display: flex;
+        justify-content: center;
+      }
+
+      .main-container {
+        width: 100%;
+        max-width: 1000px;
+        padding: 24px 20px;
+        box-sizing: border-box;
+        position: relative;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 10px;
+      }
+
+      h1 {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0;
+        color: var(--text);
+      }
+
+      .header-icons {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        position: relative;
+      }
+
+      .icon-btn {
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s, color 0.2s;
+      }
+
+      .icon-btn:hover {
+        background: var(--panel-alt);
+        color: var(--text);
+      }
+
+      .floating-settings-btn {
+        background: transparent;
+        border: none;
+        padding: 6px;
+        border-radius: 6px;
+        color: var(--muted);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s, color 0.2s;
+      }
+
+      .floating-settings-btn:hover {
+        background: var(--panel-alt);
+        color: var(--text);
+      }
+
+      .navigation-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
+        min-width: 220px;
+        display: none;
+        z-index: 1500;
+        overflow: hidden;
+      }
+
+      .navigation-menu.active {
+        display: block;
+      }
+
+      .navigation-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        font-size: 13px;
+        color: var(--text);
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .navigation-menu-item:hover {
+        background: var(--panel-alt);
+      }
+
+      .navigation-menu-item svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
+
+      section {
+        margin-bottom: 25px;
+      }
+
+      h2 {
+        font-size: 12px;
+        font-weight: 400;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 10px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
+      }
+
+      .card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 6px;
+        padding: 8px 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 38px;
+        box-sizing: border-box;
+        transition: background 0.15s, border-color 0.15s;
+        overflow: hidden;
+      }
+
+      .card:hover {
+        background-color: var(--card-hover);
+        border-color: var(--border);
+      }
+
+      .card img, .card .folder-icon-large {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+
+      .folder-icon-large {
+        background-color: #fbc02d;
+        border-radius: 3px;
+      }
+
+      .card span {
+        font-size: 12px;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .tree-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
+      }
+
+      .tree-item {
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 6px;
+        padding: 8px 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 38px;
+        box-sizing: border-box;
+        transition: background 0.15s, border-color 0.15s;
+        overflow: hidden;
+        font-size: 12px;
+        color: var(--text);
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .tree-item:hover {
+        background-color: var(--card-hover);
+        border-color: var(--border);
+      }
+
+      .tree-icon, .folder-icon-small {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+
+      .folder-icon-small {
+        height: 12px;
+        background-color: #fbc02d;
+        border-radius: 2px;
+      }
+
+      /* Context Menu */
+      #context-menu {
+        position: absolute;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        display: none;
+        z-index: 2000;
+        padding: 4px 0;
+        min-width: 150px;
+      }
+
+      .context-menu-item {
+        padding: 8px 12px;
+        font-size: 12px;
+        color: var(--text);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .context-menu-item:hover {
+        background: var(--panel-alt);
+        color: var(--text);
+      }
+
+      /* Modal Styling */
+      #modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+
+      #modal-backdrop.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      #modal-window {
+        background-color: #161616;
+        border: 1px solid #2a2a2a;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 750px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        overflow: hidden;
+      }
+
+      .modal-header {
+        padding: 10px 14px;
+        background-color: var(--panel);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .modal-breadcrumbs {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .modal-breadcrumbs span {
+        cursor: pointer;
+        color: var(--accent);
+      }
+
+      .modal-breadcrumbs span:hover {
+        text-decoration: underline;
+      }
+
+      .modal-close-btn {
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        font-size: 16px;
+        cursor: pointer;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+
+      .modal-close-btn:hover {
+        background: var(--panel-alt);
+        color: var(--text);
+      }
+
+      .modal-body {
+        padding: 14px;
+        overflow-y: auto;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
+        max-height: 60vh;
+      }
+
+      /* History Panel (Side) */
+      .history-panel {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 320px;
+        height: 100vh;
+        background: var(--panel);
+        border-right: 1px solid var(--border);
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+        z-index: 2500;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .history-panel.active {
+        transform: translateX(0);
+      }
+
+      .history-trigger {
+        position: fixed;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 24px;
+        height: 60px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-left: none;
+        border-radius: 0 8px 8px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--muted);
+        transition: color 0.2s, background 0.2s, left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 2501;
+      }
+
+      .history-panel.active + .history-trigger,
+      .history-panel.active ~ .history-trigger {
+        left: 320px;
+      }
+
+      .history-trigger:hover {
+        color: var(--text);
+        background: var(--panel-alt);
+      }
+
+      .history-trigger svg {
+        transition: transform 0.3s;
+      }
+
+      .history-panel.active + .history-trigger svg,
+      .history-panel.active ~ .history-trigger svg {
+        transform: rotate(180deg);
+      }
+
+      .history-content {
+        padding: 20px;
+        flex-grow: 1;
+        overflow-y: auto;
+      }
+
+      .history-header-main {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+      }
+
+      .history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .history-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.15s;
+        font-size: 13px;
+        color: var(--text);
+        border: 1px solid transparent;
+      }
+
+      .history-item:hover {
+        background: var(--card-hover);
+        border-color: var(--card-border);
+      }
+
+      .history-item img {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+
+      .history-item .title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-grow: 1;
+      }
+
+      .history-item .restore-btn {
+        font-size: 11px;
+        color: var(--accent);
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+
+      .history-item:hover .restore-btn {
+        opacity: 1;
+      }
+
+      .window-entry {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        background: var(--panel-alt);
+        padding: 4px;
+      }
+
+      .window-header {
+        font-weight: 600;
+        background: transparent !important;
+        border: none !important;
+      }
+
+      .window-tabs {
+        padding-left: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .window-tab-item {
+        font-size: 12px;
+        padding: 4px 8px;
+        opacity: 0.8;
+      }
+
+      .window-tab-item:hover {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-container">
+      <header>
+        <h1>Bookmarks</h1>
+        <div class="header-icons">
+          <button id="navBtn" class="floating-settings-btn" title="Navigation" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="7" x2="20" y2="7"></line>
+              <line x1="4" y1="12" x2="20" y2="12"></line>
+              <line x1="4" y1="17" x2="20" y2="17"></line>
+            </svg>
+          </button>
+          <div id="nav-menu" class="navigation-menu"></div>
+        </div>
+      </header>
+
+      <section>
+        <h2>Pinned Bookmarks</h2>
+        <div id="top-used-grid" class="grid"></div>
+      </section>
+
+      <section>
+        <h2>Recently Viewed</h2>
+        <div id="recently-viewed-grid" class="grid"></div>
+      </section>
+
+      <section>
+        <h2>All Bookmarks</h2>
+        <ul id="all-bookmarks-tree" class="tree-list"></ul>
+      </section>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="context-menu">
+      <div id="context-menu-rename" class="context-menu-item">Rename Pinned Item</div>
+      <div id="context-menu-action" class="context-menu-item">Pin to Top</div>
+    </div>
+
+    <!-- Modal Template -->
+    <div id="modal-backdrop">
+      <div id="modal-window">
+        <div class="modal-header">
+          <div id="modal-breadcrumbs" class="modal-breadcrumbs"></div>
+          <button id="modal-close" class="modal-close-btn">&times;</button>
+        </div>
+        <div id="modal-body" class="modal-body"></div>
+      </div>
+    </div>
+
+    <!-- History Panel -->
+    <div id="history-panel" class="history-panel">
+      <div class="history-content">
+        <div class="history-header-main">Session History</div>
+        <div id="history-unified-list" class="history-list"></div>
+      </div>
+    </div>
+    <div id="history-trigger" class="history-trigger" title="Session History">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="navigation.js"></script>
+    <script src="home.js"></script>
+  </body>
+</html>
