@@ -177,7 +177,7 @@ async function renderRecentlyViewed() {
         for (const item of historyItems) {
             if (!item.url || !item.title) continue;
             if (item.url.startsWith('chrome://') || item.url.startsWith('chrome-extension://') || item.url.includes('home.html')) continue;
-            
+
             if (!seenUrls.has(item.url)) {
                 seenUrls.add(item.url);
                 uniqueItems.push(item);
@@ -226,7 +226,7 @@ function renderAllBookmarksTree(rootNode) {
     treeList.innerHTML = '';
 
     const rootNodes = rootNode.children || [];
-    
+
     rootNodes.forEach(node => {
         const item = document.createElement('li');
         item.className = 'tree-item';
@@ -264,7 +264,7 @@ function renderAllBookmarksTree(rootNode) {
 
             item.appendChild(folderIcon);
             item.appendChild(span);
-            
+
             item.addEventListener('click', () => {
                 openFolderModal(node, [node]);
             });
@@ -301,7 +301,7 @@ function openFolderModal(folderNode, pathArray) {
 
         const crumb = document.createElement('span');
         crumb.textContent = node.title;
-        
+
         if (index === pathArray.length - 1) {
             crumb.style.color = '#fff';
             crumb.style.cursor = 'default';
@@ -351,7 +351,7 @@ function openFolderModal(folderNode, pathArray) {
 
             card.appendChild(folderIcon);
             card.appendChild(span);
-            
+
             card.addEventListener('click', () => {
                 openFolderModal(node, [...pathArray, node]);
             });
@@ -376,7 +376,7 @@ function showContextMenu(e, node, isPinned, isPinnedSection) {
     if (!menu || !actionItem || !renameItem) return;
 
     actionItem.textContent = isPinned ? 'Remove from Top' : 'Pin to Top';
-    
+
     if (isPinnedSection) {
         renameItem.style.display = 'block';
     } else {
@@ -517,6 +517,9 @@ async function renderSessionHistory() {
                 }
             });
 
+            // Limit the recently closed tabs list to a maximum of 7 items
+            const limitedOtherClosedTabs = otherClosedTabs.slice(0, 7);
+
             // Helper to render a tab list
             const renderTabGroup = (tabs, title, iconSvg) => {
                 if (tabs.length === 0) return;
@@ -574,7 +577,7 @@ async function renderSessionHistory() {
 
             // Render Groups
             renderTabGroup(currentWindowTabs, 'Current Window (Closed Tabs)', winIcon);
-            renderTabGroup(otherClosedTabs, 'Recently Closed Tabs', tabIcon);
+            renderTabGroup(limitedOtherClosedTabs, 'Recently Closed Tabs', tabIcon);
 
             // Render other Closed Windows
             closedWindows.forEach(windowSession => {
@@ -665,6 +668,3 @@ function createHistoryItem(data, sessionId, isWindow = false) {
 
     return item;
 }
-
-
-
