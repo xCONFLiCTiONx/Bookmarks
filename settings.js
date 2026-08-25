@@ -14,7 +14,9 @@ function applyThemeToSettingsPage(theme) {
 }
 
 function populateFolderSelect(select, nodes, depth = 0) {
-  nodes.forEach(node => {
+  const sortedNodes = [...nodes].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+
+  sortedNodes.forEach(node => {
     if (!node.url) {
       const option = document.createElement('option');
       option.value = node.id;

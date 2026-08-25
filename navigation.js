@@ -60,8 +60,17 @@ function getFaviconUrl(url, size = 16) {
 
 function renderNavigationMenu(menu) {
     const items = getNavigationItems();
+
+    // Separate Extension Settings
+    const otherItems = items.filter(item => item.id !== 'extensionSettings');
+    const settingsItem = items.find(item => item.id === 'extensionSettings');
+
+    // Sort other items alphabetically by title
+    otherItems.sort((a, b) => a.title.localeCompare(b.title));
+
     menu.innerHTML = '';
-    items.forEach(item => {
+
+    const renderItem = (item) => {
         const row = document.createElement('div');
         row.className = 'navigation-menu-item';
         row.innerHTML = `<span>${item.svg}</span><span>${item.title}</span>`;
@@ -70,7 +79,16 @@ function renderNavigationMenu(menu) {
             item.onClick();
         });
         menu.appendChild(row);
-    });
+    };
+
+    otherItems.forEach(renderItem);
+
+    if (settingsItem) {
+        const divider = document.createElement('div');
+        divider.className = 'navigation-divider';
+        menu.appendChild(divider);
+        renderItem(settingsItem);
+    }
 }
 
 function setupNavigationMenu() {
