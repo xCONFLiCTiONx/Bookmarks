@@ -256,13 +256,21 @@ async function handleDrop(e) {
                 // Move into the folder (at the end)
                 await chrome.bookmarks.move(dragData.id, { parentId: targetId });
             } else {
-                // Reorder: Move to the same folder as target, at target's position
+                // Reorder: Move to the same folder as target
                 const targetNode = (await chrome.bookmarks.get(targetId))[0];
+                const dragNode = (await chrome.bookmarks.get(dragData.id))[0];
+
+                if (!targetNode) return false;
+
+                // Move source item to target's index
                 await chrome.bookmarks.move(dragData.id, {
                     parentId: targetNode.parentId,
                     index: targetNode.index
                 });
             }
+
+            // Increase delay slightly to ensure Chrome has finished the update
+            await new Promise(r => setTimeout(r, 150));
 
             // Refresh main page components
             await initializeBookmarkPage();
@@ -270,6 +278,7 @@ async function handleDrop(e) {
             // Refresh modal if open
             if (currentModalPath) {
                 const lastNode = currentModalPath[currentModalPath.length - 1];
+                // Refetch the folder tree to get the new child order
                 const updatedTree = await chrome.bookmarks.getSubTree(lastNode.id);
                 if (updatedTree && updatedTree[0]) {
                     openFolderModal(updatedTree[0], currentModalPath);
