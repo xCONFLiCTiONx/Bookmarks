@@ -199,10 +199,15 @@
         border-color: var(--accent);
       }
 
-      .card.drag-over {
+      .card.drag-over, .tree-item.drag-over {
         border: 2px dashed var(--accent) !important;
         transform: scale(1.02);
-        background: var(--card-hover);
+        background: var(--card-hover) !important;
+        z-index: 10;
+      }
+
+      .card > * {
+        pointer-events: none;
       }
 
       .card img, .card .folder-icon-large {
@@ -267,6 +272,10 @@
         border: 2px dashed var(--accent) !important;
         transform: scale(1.02);
         background: var(--card-hover);
+      }
+
+      .tree-item > * {
+        pointer-events: none;
       }
 
       .tree-icon, .folder-icon-small {
@@ -365,6 +374,10 @@
       .modal-breadcrumbs span {
         cursor: pointer;
         color: var(--accent);
+      }
+
+      .modal-breadcrumbs span > * {
+        pointer-events: none;
       }
 
       .modal-breadcrumbs span:hover {

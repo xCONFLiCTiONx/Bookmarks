@@ -220,11 +220,11 @@ async function handleDrop(e) {
     const rawData = e.dataTransfer.getData('application/x-bookmark-data');
     if (!rawData) return false;
 
+    // Clear all drag-over classes immediately
+    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+
     const dragData = JSON.parse(rawData);
     const target = this;
-
-    // Remove drag-over styling
-    target.classList.remove('drag-over');
 
     // Case 1: Dropping into the Pinned Grid (for reordering pinned items)
     if (target.closest('#top-used-grid') && dragSource && dragSource.closest('#top-used-grid')) {
