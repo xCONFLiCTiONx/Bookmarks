@@ -1,6 +1,7 @@
 let allNodesMap = new Map();
 let currentContextMenuNode = null;
 let dragSource = null;
+let currentModalPath = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     await initializeBookmarkPage();
@@ -54,6 +55,9 @@ function resolveRootNode(bookmarkTree, preferredId) {
 
 async function initializeBookmarkPage() {
     try {
+        // Optionally sort bookmarks alphabetically before rendering
+        await sortAllBookmarksAlphabetically();
+
         const bookmarkTree = await chrome.bookmarks.getTree();
         const preferredRootFolderId = await getPreferredRootFolderId();
         const rootNode = resolveRootNode(bookmarkTree, preferredRootFolderId);
@@ -69,15 +73,69 @@ async function initializeBookmarkPage() {
                 }
             }
         }
-        if (rootNode.children) {
-            traverse(rootNode.children);
-        }
+        traverse(bookmarkTree);
 
         await renderPinnedBookmarks();
         await renderRecentlyViewed();
         renderAllBookmarksTree(rootNode);
     } catch (error) {
         console.error("Failed to initialize bookmarks:", error);
+    }
+}
+
+async function sortAllBookmarksAlphabetically() {
+    return new Promise((resolve) => {
+        chrome.storage.local.get({ sortAlphabetically: false }, async (result) => {
+            if (result.sortAlphabetically) {
+                try {
+                    const tree = await chrome.bookmarks.getTree();
+                    if (tree && tree[0]) {
+                        await sortNodeRecursive(tree[0]);
+                    }
+                } catch (err) {
+                    console.error("Sorting failed:", err);
+                }
+            }
+            resolve();
+        });
+    });
+}
+
+async function sortNodeRecursive(node) {
+    if (node.children && node.children.length > 0) {
+        // Create a copy to sort
+        const sortedChildren = [...node.children].sort((a, b) => {
+            // Folders first, then bookmarks
+            if (!a.url && b.url) return -1;
+            if (a.url && !b.url) return 1;
+            return (a.title || '').localeCompare(b.title || '', undefined, { numeric: true, sensitivity: 'base' });
+        });
+
+        // Check if order needs to be updated
+        let needsUpdate = false;
+        for (let i = 0; i < node.children.length; i++) {
+            if (node.children[i].id !== sortedChildren[i].id) {
+                needsUpdate = true;
+                break;
+            }
+        }
+
+        if (needsUpdate) {
+            for (let i = 0; i < sortedChildren.length; i++) {
+                // Move each child to its correct position if it's not already there
+                // This is safer than moving everything blindly
+                await new Promise((resolveMove) => {
+                    chrome.bookmarks.move(sortedChildren[i].id, { index: i }, () => resolveMove());
+                });
+            }
+        }
+
+        // Recursively sort folders
+        for (const child of node.children) {
+            if (!child.url) {
+                await sortNodeRecursive(child);
+            }
+        }
     }
 }
 
@@ -169,7 +227,7 @@ async function handleDrop(e) {
     target.classList.remove('drag-over');
 
     // Case 1: Dropping into the Pinned Grid (for reordering pinned items)
-    if (target.closest('#top-used-grid') && dragSource.closest('#top-used-grid')) {
+    if (target.closest('#top-used-grid') && dragSource && dragSource.closest('#top-used-grid')) {
         const topGrid = document.getElementById('top-used-grid');
         const cards = Array.from(topGrid.querySelectorAll('.card'));
         const fromIndex = cards.indexOf(dragSource);
@@ -190,6 +248,9 @@ async function handleDrop(e) {
         const targetId = target.dataset.id;
         const targetIsFolder = target.dataset.isFolder === 'true';
 
+        // Don't allow dropping an item onto itself
+        if (dragData.id === targetId) return false;
+
         try {
             if (targetIsFolder) {
                 // Move into the folder (at the end)
@@ -202,14 +263,17 @@ async function handleDrop(e) {
                     index: targetNode.index
                 });
             }
-            // Refresh to show changes
+
+            // Refresh main page components
             await initializeBookmarkPage();
 
-            // If we are in a modal, we might need to update its content if it's still open
-            const modalBackdrop = document.getElementById('modal-backdrop');
-            if (modalBackdrop.classList.contains('active')) {
-                // Simple way: re-open current folder by finding its breadcrumb or state
-                // For now, initializeBookmarkPage might be enough if it doesn't close the modal
+            // Refresh modal if open
+            if (currentModalPath) {
+                const lastNode = currentModalPath[currentModalPath.length - 1];
+                const updatedTree = await chrome.bookmarks.getSubTree(lastNode.id);
+                if (updatedTree && updatedTree[0]) {
+                    openFolderModal(updatedTree[0], currentModalPath);
+                }
             }
         } catch (err) {
             console.error("Failed to move bookmark:", err);
@@ -384,7 +448,7 @@ function renderAllBookmarksTree(rootNode) {
             item.appendChild(span);
 
             item.addEventListener('click', () => {
-                openFolderModal(node, [node]);
+                openFolderModal(node, [rootNode, node]);
             });
 
             item.addEventListener('contextmenu', (e) => {
@@ -405,18 +469,26 @@ function renderAllBookmarksTree(rootNode) {
 }
 
 function openFolderModal(folderNode, pathArray) {
+    currentModalPath = pathArray;
     const backdrop = document.getElementById('modal-backdrop');
     const modalBody = document.getElementById('modal-body');
     const breadcrumbs = document.getElementById('modal-breadcrumbs');
     if (!backdrop || !modalBody || !breadcrumbs) return;
 
     modalBody.innerHTML = '';
+    // Also make modal body a drop target to move items into this folder
+    modalBody.dataset.id = folderNode.id;
+    modalBody.dataset.isFolder = 'true';
+    modalBody.addEventListener('dragover', handleDragOver);
+    modalBody.addEventListener('dragenter', handleDragEnter);
+    modalBody.addEventListener('dragleave', handleDragLeave);
+    modalBody.addEventListener('drop', handleDrop);
 
     breadcrumbs.innerHTML = '';
     pathArray.forEach((node, index) => {
-        if (node.id === "2") return;
+        if (node.id === "0") return;
 
-        if (index > 0 && breadcrumbs.childNodes.length > 0) {
+        if (breadcrumbs.childNodes.length > 0) {
             const separator = document.createElement('span');
             separator.textContent = ' > ';
             separator.style.color = '#777';
@@ -596,10 +668,12 @@ function setupModalListeners() {
     if (closeBtn && backdrop) {
         closeBtn.addEventListener('click', () => {
             backdrop.classList.remove('active');
+            currentModalPath = null;
         });
         backdrop.addEventListener('click', (e) => {
             if (e.target === backdrop) {
                 backdrop.classList.remove('active');
+                currentModalPath = null;
             }
         });
     }

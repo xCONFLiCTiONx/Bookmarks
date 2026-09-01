@@ -34,11 +34,14 @@ function loadSettings() {
   chrome.storage.local.get({
     popupRootFolderId: '2',
     popupRootFolder: '2',
-    theme: 'system'
+    theme: 'system',
+    sortAlphabetically: false
   }, settings => {
 
     const savedRootFolderId = settings.popupRootFolderId || settings.popupRootFolder || '2';
     document.getElementById('popupRootFolder').value = savedRootFolderId;
+
+    document.getElementById('sortAlphabetically').checked = settings.sortAlphabetically;
 
     applyThemeToSettingsPage(settings.theme);
     attachSaveHandlers();
@@ -49,16 +52,19 @@ function loadSettings() {
 function attachSaveHandlers() {
   document.getElementById('popupRootFolder').addEventListener('change', saveSettings);
   document.getElementById('themeSelect').addEventListener('change', saveSettings);
+  document.getElementById('sortAlphabetically').addEventListener('change', saveSettings);
 }
 
 function saveSettings() {
   const popupRootFolderId = String(document.getElementById('popupRootFolder').value || '2');
   const theme = document.getElementById('themeSelect').value;
+  const sortAlphabetically = document.getElementById('sortAlphabetically').checked;
 
   chrome.storage.local.set({
     popupRootFolderId,
     popupRootFolder: popupRootFolderId,
-    theme
+    theme,
+    sortAlphabetically
   });
 
   if (window.applyTheme) {
