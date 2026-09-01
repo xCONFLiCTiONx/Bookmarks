@@ -124,9 +124,16 @@ function handleCardClick(e, url) {
 function handleDragStart(e) {
     dragSource = this;
     e.dataTransfer.effectAllowed = 'move';
+
     // Use a custom type to prevent Chrome from interpreting this as a URL drag
-    // which triggers the "Create split view" or external drag behavior.
-    e.dataTransfer.setData('application/x-bookmark-id', this.dataset.url);
+    const dragData = {
+        url: this.dataset.url,
+        id: this.dataset.id,
+        isFolder: this.dataset.isFolder === 'true',
+        type: this.closest('#top-used-grid') ? 'pinned' : 'chrome'
+    };
+
+    e.dataTransfer.setData('application/x-bookmark-data', JSON.stringify(dragData));
     this.classList.add('dragging');
 }
 
@@ -152,7 +159,17 @@ async function handleDrop(e) {
     e.preventDefault();
     e.stopPropagation();
 
-    if (this !== dragSource) {
+    const rawData = e.dataTransfer.getData('application/x-bookmark-data');
+    if (!rawData) return false;
+
+    const dragData = JSON.parse(rawData);
+    const target = this;
+
+    // Remove drag-over styling
+    target.classList.remove('drag-over');
+
+    // Case 1: Dropping into the Pinned Grid (for reordering pinned items)
+    if (target.closest('#top-used-grid') && dragSource.closest('#top-used-grid')) {
         const topGrid = document.getElementById('top-used-grid');
         const cards = Array.from(topGrid.querySelectorAll('.card'));
         const fromIndex = cards.indexOf(dragSource);
@@ -165,14 +182,46 @@ async function handleDrop(e) {
             await setPinnedUrls(pinnedUrls);
             await renderPinnedBookmarks();
         }
+        return false;
     }
+
+    // Case 2: Dropping an All-Bookmarks item (or Pinned item) into a Folder or near a Bookmark
+    if (dragData.id) {
+        const targetId = target.dataset.id;
+        const targetIsFolder = target.dataset.isFolder === 'true';
+
+        try {
+            if (targetIsFolder) {
+                // Move into the folder (at the end)
+                await chrome.bookmarks.move(dragData.id, { parentId: targetId });
+            } else {
+                // Reorder: Move to the same folder as target, at target's position
+                const targetNode = (await chrome.bookmarks.get(targetId))[0];
+                await chrome.bookmarks.move(dragData.id, {
+                    parentId: targetNode.parentId,
+                    index: targetNode.index
+                });
+            }
+            // Refresh to show changes
+            await initializeBookmarkPage();
+
+            // If we are in a modal, we might need to update its content if it's still open
+            const modalBackdrop = document.getElementById('modal-backdrop');
+            if (modalBackdrop.classList.contains('active')) {
+                // Simple way: re-open current folder by finding its breadcrumb or state
+                // For now, initializeBookmarkPage might be enough if it doesn't close the modal
+            }
+        } catch (err) {
+            console.error("Failed to move bookmark:", err);
+        }
+    }
+
     return false;
 }
 
 function handleDragEnd(e) {
     this.classList.remove('dragging');
-    const cards = document.querySelectorAll('#top-used-grid .card');
-    cards.forEach(card => card.classList.remove('drag-over'));
+    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
 }
 
 async function renderPinnedBookmarks() {
@@ -192,6 +241,7 @@ async function renderPinnedBookmarks() {
         card.title = displayTitle;
         card.draggable = true;
         card.dataset.url = url;
+        if (node) card.dataset.id = node.id;
 
         const img = document.createElement('img');
         img.src = getFaviconUrl(url, 16);
@@ -295,6 +345,10 @@ function renderAllBookmarksTree(rootNode) {
         const item = document.createElement('li');
         item.className = 'tree-item';
         item.title = node.title;
+        item.draggable = true;
+        item.dataset.id = node.id;
+        item.dataset.url = node.url || '';
+        item.dataset.isFolder = !node.url;
 
         if (node.url) {
             const img = document.createElement('img');
@@ -339,6 +393,13 @@ function renderAllBookmarksTree(rootNode) {
             });
         }
 
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragover', handleDragOver);
+        item.addEventListener('dragenter', handleDragEnter);
+        item.addEventListener('dragleave', handleDragLeave);
+        item.addEventListener('drop', handleDrop);
+        item.addEventListener('dragend', handleDragEnd);
+
         treeList.appendChild(item);
     });
 }
@@ -376,6 +437,15 @@ function openFolderModal(folderNode, pathArray) {
                 openFolderModal(node, newPath);
             });
         }
+
+        // Make breadcrumbs drop targets too!
+        crumb.dataset.id = node.id;
+        crumb.dataset.isFolder = 'true';
+        crumb.addEventListener('dragover', handleDragOver);
+        crumb.addEventListener('dragenter', handleDragEnter);
+        crumb.addEventListener('dragleave', handleDragLeave);
+        crumb.addEventListener('drop', handleDrop);
+
         breadcrumbs.appendChild(crumb);
     });
 
@@ -384,6 +454,10 @@ function openFolderModal(folderNode, pathArray) {
         const card = document.createElement('div');
         card.className = 'card';
         card.title = node.title;
+        card.draggable = true;
+        card.dataset.id = node.id;
+        card.dataset.url = node.url || '';
+        card.dataset.isFolder = !node.url;
 
         if (node.url) {
             const img = document.createElement('img');
@@ -425,6 +499,13 @@ function openFolderModal(folderNode, pathArray) {
                 e.stopPropagation();
             });
         }
+
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragover', handleDragOver);
+        card.addEventListener('dragenter', handleDragEnter);
+        card.addEventListener('dragleave', handleDragLeave);
+        card.addEventListener('drop', handleDrop);
+        card.addEventListener('dragend', handleDragEnd);
 
         modalBody.appendChild(card);
     });

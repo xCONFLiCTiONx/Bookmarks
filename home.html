@@ -257,6 +257,18 @@
         border-color: var(--border);
       }
 
+      .tree-item.dragging {
+        opacity: 0.5;
+        background: var(--card-hover);
+        border-color: var(--accent);
+      }
+
+      .tree-item.drag-over {
+        border: 2px dashed var(--accent) !important;
+        transform: scale(1.02);
+        background: var(--card-hover);
+      }
+
       .tree-icon, .folder-icon-small {
         width: 16px;
         height: 16px;
