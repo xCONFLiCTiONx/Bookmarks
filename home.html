@@ -193,6 +193,18 @@
         border-color: var(--border);
       }
 
+      .card.dragging {
+        opacity: 0.5;
+        background: var(--card-hover);
+        border-color: var(--accent);
+      }
+
+      .card.drag-over {
+        border: 2px dashed var(--accent) !important;
+        transform: scale(1.02);
+        background: var(--card-hover);
+      }
+
       .card img, .card .folder-icon-large {
         width: 16px;
         height: 16px;

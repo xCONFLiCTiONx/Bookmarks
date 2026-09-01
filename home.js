@@ -1,5 +1,6 @@
 let allNodesMap = new Map();
 let currentContextMenuNode = null;
+let dragSource = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     await initializeBookmarkPage();
@@ -120,6 +121,60 @@ function handleCardClick(e, url) {
     }
 }
 
+function handleDragStart(e) {
+    dragSource = this;
+    e.dataTransfer.effectAllowed = 'move';
+    // Use a custom type to prevent Chrome from interpreting this as a URL drag
+    // which triggers the "Create split view" or external drag behavior.
+    e.dataTransfer.setData('application/x-bookmark-id', this.dataset.url);
+    this.classList.add('dragging');
+}
+
+function handleDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault();
+    }
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+}
+
+function handleDragEnter(e) {
+    if (this !== dragSource) {
+        this.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    this.classList.remove('drag-over');
+}
+
+async function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (this !== dragSource) {
+        const topGrid = document.getElementById('top-used-grid');
+        const cards = Array.from(topGrid.querySelectorAll('.card'));
+        const fromIndex = cards.indexOf(dragSource);
+        const toIndex = cards.indexOf(this);
+
+        if (fromIndex !== -1 && toIndex !== -1) {
+            let pinnedUrls = await getPinnedUrls();
+            const movedUrl = pinnedUrls.splice(fromIndex, 1)[0];
+            pinnedUrls.splice(toIndex, 0, movedUrl);
+            await setPinnedUrls(pinnedUrls);
+            await renderPinnedBookmarks();
+        }
+    }
+    return false;
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+    const cards = document.querySelectorAll('#top-used-grid .card');
+    cards.forEach(card => card.classList.remove('drag-over'));
+}
+
 async function renderPinnedBookmarks() {
     const topGrid = document.getElementById('top-used-grid');
     if (!topGrid) return;
@@ -135,6 +190,8 @@ async function renderPinnedBookmarks() {
         const card = document.createElement('div');
         card.className = 'card';
         card.title = displayTitle;
+        card.draggable = true;
+        card.dataset.url = url;
 
         const img = document.createElement('img');
         img.src = getFaviconUrl(url, 16);
@@ -157,6 +214,13 @@ async function renderPinnedBookmarks() {
             const isPinned = pinnedUrls.includes(url);
             showContextMenu(e, { url: url, title: displayTitle }, isPinned, true);
         });
+
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragover', handleDragOver);
+        card.addEventListener('dragenter', handleDragEnter);
+        card.addEventListener('dragleave', handleDragLeave);
+        card.addEventListener('drop', handleDrop);
+        card.addEventListener('dragend', handleDragEnd);
 
         topGrid.appendChild(card);
     });
