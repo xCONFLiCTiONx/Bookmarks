@@ -311,7 +311,7 @@ async function renderPinnedBookmarks() {
 
         const card = document.createElement('div');
         card.className = 'card';
-        card.title = displayTitle;
+        card.title = url;
         card.draggable = true;
         card.dataset.url = url;
         if (node) card.dataset.id = node.id;
@@ -375,7 +375,7 @@ async function renderRecentlyViewed() {
         uniqueItems.forEach(item => {
             const card = document.createElement('div');
             card.className = 'card';
-            card.title = item.title;
+            card.title = item.url;
 
             const img = document.createElement('img');
             img.src = getFaviconUrl(item.url, 16);
@@ -417,7 +417,7 @@ function renderAllBookmarksTree(rootNode) {
     rootNodes.forEach(node => {
         const item = document.createElement('li');
         item.className = 'tree-item';
-        item.title = node.title;
+        item.title = node.url || node.title;
         item.draggable = true;
         item.dataset.id = node.id;
         item.dataset.url = node.url || '';
@@ -534,7 +534,7 @@ function openFolderModal(folderNode, pathArray) {
     children.forEach(node => {
         const card = document.createElement('div');
         card.className = 'card';
-        card.title = node.title;
+        card.title = node.url || node.title;
         card.draggable = true;
         card.dataset.id = node.id;
         card.dataset.url = node.url || '';

@@ -47,6 +47,7 @@ async function render(folderId) {
         if (children) {
             children.forEach(node => {
                 const li = document.createElement('li');
+                li.title = node.url || node.title;
                 if (node.url) {
                     const icon = document.createElement('img');
                     icon.style.marginRight = '10px';
