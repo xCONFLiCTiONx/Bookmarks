@@ -3,6 +3,45 @@ let currentContextMenuNode = null;
 let dragSource = null;
 let currentModalPath = null;
 
+
+async function updateThemeIcon() {
+    // Detect whether the browser/system is currently in dark mode
+    // (Using self.matchMedia which is supported in MV3 service workers)
+    const isDarkMode = self.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    // Set color based on active mode: White for dark mode, Black for light mode
+    const iconColor = isDarkMode ? '#FFFFFF' : '#000000';
+
+    const size = 48;
+    const canvas = new OffscreenCanvas(size, size);
+    const ctx = canvas.getContext('2d');
+
+    ctx.clearRect(0, 0, size, size);
+    ctx.fillStyle = iconColor;
+
+    // Draw your exact vector path from icon.svg scaled to 48x48
+    ctx.save();
+    ctx.scale(2, 2); // Scale 24x24 viewBox to 48x48
+    const p = new Path2D("M6 2h12v20l-6-4-6 4V2z");
+    ctx.fill(p);
+    ctx.restore();
+
+    const imageData = ctx.getImageData(0, 0, size, size);
+    chrome.action.setIcon({ imageData: imageData });
+}
+
+// Listen for theme changes dynamically
+self.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateThemeIcon);
+
+// Run on extension installation, startup, and service worker load
+chrome.runtime.onInstalled.addListener(updateThemeIcon);
+chrome.runtime.onStartup.addListener(updateThemeIcon);
+
+updateThemeIcon();
+
+
+
+
 document.addEventListener('DOMContentLoaded', async () => {
     await initializeBookmarkPage();
     setupModalListeners();

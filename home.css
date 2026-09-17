@@ -14,3 +14,15 @@ body {
     grid-template-columns: repeat(var(--col-count, 6), minmax(0, 1fr));
     gap: 16px;
 }
+
+/* If your background is white, make the SVG dark/black */
+.light-theme svg,
+body:not(.dark-theme) svg {
+    fill: #111111;
+}
+
+/* If your background is dark, make the SVG white/light */
+.dark-theme svg,
+body.dark-theme svg {
+    fill: #ffffff;
+}
