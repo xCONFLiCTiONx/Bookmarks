@@ -1,3 +1,5 @@
+<img src="icons/icon128.png" width="64" align="left" style="margin-right: 20px; border-radius: 10px;">
+
 # Bookmarks
 
 A clean, dark-themed bookmark navigation menu with alphabetical sort, which replaces your new tab and home page with a fast, keyboard-friendly bookmark dashboard.
