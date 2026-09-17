@@ -32,6 +32,30 @@ async function updateThemeIcon() {
 // Listen for theme changes dynamically
 self.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateThemeIcon);
 
+function updatePageFavicon() {
+    const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const iconColor = isDarkMode ? '%23FFFFFF' : '%23000000'; // URL-encoded #FFFFFF or #000000
+
+    // Construct a dynamic SVG data URI using your exact path
+    const svgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="${iconColor}" d="M6 2h12v20l-6-4-6 4V2z"/></svg>`;
+    const dataUri = `data:image/svg+xml;utf8,${svgString}`;
+
+    // Find existing dynamic favicon or create one
+    let link = document.querySelector("link[rel*='icon']");
+    if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+    }
+    link.href = dataUri;
+}
+
+// Run on page load
+updatePageFavicon();
+
+// Listen for dynamic theme shifts (e.g., toggling Windows/Chrome dark mode)
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updatePageFavicon);
+
 // Run on extension installation, startup, and service worker load
 chrome.runtime.onInstalled.addListener(updateThemeIcon);
 chrome.runtime.onStartup.addListener(updateThemeIcon);
