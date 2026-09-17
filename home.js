@@ -3,7 +3,6 @@ let currentContextMenuNode = null;
 let dragSource = null;
 let currentModalPath = null;
 
-
 async function updateThemeIcon() {
     // Detect whether the browser/system is currently in dark mode
     // (Using self.matchMedia which is supported in MV3 service workers)
@@ -38,9 +37,6 @@ chrome.runtime.onInstalled.addListener(updateThemeIcon);
 chrome.runtime.onStartup.addListener(updateThemeIcon);
 
 updateThemeIcon();
-
-
-
 
 document.addEventListener('DOMContentLoaded', async () => {
     await initializeBookmarkPage();
